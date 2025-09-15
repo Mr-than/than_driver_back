@@ -39,8 +39,7 @@ public class DownLoadController {
             response.setStatus(300);
             return;
         }
-        try (InputStream inputStream = new FileInputStream(file);
-             ServletOutputStream outputStream = response.getOutputStream()) {
+        try (InputStream inputStream = new FileInputStream(file); ServletOutputStream outputStream = response.getOutputStream()) {
             response.reset();
             response.setContentType("application/octet-stream");
             String filename = file.getName();
@@ -56,39 +55,49 @@ public class DownLoadController {
         }
     }
 
+    public void downloadFolder(){
+
+    }
+
+    @PostMapping("/delete_file")
+    @ResponseBody
+    public void deleteFile(String path){
+        downloadService.deleteFile(path);
+    }
+
     @PostMapping("/upload")
     @ResponseBody
-    public String upload(@RequestParam("file") MultipartFile file, @RequestParam("path") String path,@RequestParam("md5")String md5) {
-        return downloadService.upload(file,md5,path);
+    public String upload(@RequestParam("file") MultipartFile file, @RequestParam("path") String path, @RequestParam("md5") String md5,@RequestParam("num") String num) {
+        return downloadService.upload(file, md5, path, Integer.parseInt(num));
     }
 
     @ResponseBody
     @GetMapping("/get_map")
-    public Map<String,String> getFileMap(){
+    public Map<String, String> getFileMap() {
         return downloadService.getFileMap();
     }
 
     @ResponseBody
     @PostMapping("/sync_file")
-    public Map<String,String> syncFileMap(@RequestBody Map<String,String> map){
+    public Map<String, String> syncFileMap(@RequestBody Map<String, String> map) {
         return downloadService.syncFileMap(map);
     }
 
     @ResponseBody
     @GetMapping("/get_delete")
-    public Map<String,String> getDeleteMap(){
+    public Map<String, String> getDeleteMap() {
         return downloadService.getDeleteMap();
     }
 
     @ResponseBody
     @PostMapping("/get_file_versions")
-    public List<String> searchFile(@RequestParam("path")String path){
+    public List<String> searchFile(@RequestParam("path") String path) {
         return downloadService.searchFile(path);
     }
 
     @ResponseBody
     @GetMapping("/heart")
-    public String heart(){
+    public String heart() {
         return "ok";
     }
 }

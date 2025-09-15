@@ -21,14 +21,14 @@ public class DownLoadService {
         this.record = record;
     }
 
-    public String upload(MultipartFile file,String md5,String path){
+    public String upload(MultipartFile file, String md5, String path, int num) {
 
 
         String originalFilename = file.getOriginalFilename();
         String originalPath = path;
 
-        if (!record.isNeedUpload(originalPath,md5)) {
-            record.addFile(originalPath,md5);
+        if (!record.isNeedUpload(originalPath, md5)) {
+            record.addFile(originalPath, md5);
             record.removeFromDelete(originalPath);
             return "{\"msg\":\"true\"}";
         }
@@ -42,8 +42,8 @@ public class DownLoadService {
         if (originalFilename != null) {
             if (originalFilename.contains(".")) {
                 name = originalFilename.substring(0, originalFilename.lastIndexOf(".")) + System.currentTimeMillis() + originalFilename.substring(originalFilename.lastIndexOf("."));
-            }else {
-                name = originalFilename+ System.currentTimeMillis();
+            } else {
+                name = originalFilename + System.currentTimeMillis();
             }
         }
         File uploadFile = new File(home + "/" + path + "/" + name);
@@ -52,10 +52,10 @@ public class DownLoadService {
         } catch (IOException e) {
             deleteFailFail(uploadFile);
         }
-        record.addFile(originalPath,md5);
+        record.addFile(originalPath, md5);
         record.removeFromDelete(originalPath);
         File[] files = uploadFile.getParentFile().listFiles();
-        if (files.length>5){
+        if (files.length > num) {
             Optional<File> min = Arrays.stream(files).min(Comparator.comparingLong(File::lastModified));
             min.get().delete();
         }
@@ -63,8 +63,7 @@ public class DownLoadService {
     }
 
 
-
-    public Map<String,String> getFileMap(){
+    public Map<String, String> getFileMap() {
         return record.getRecords();
     }
 
@@ -79,7 +78,7 @@ public class DownLoadService {
     public List<String> searchFile(String path) {
         File file = new File(home + "/" + tranPathName(path));
         List<String> list = new ArrayList<>();
-        if (!file.exists()||!file.isDirectory()) {
+        if (!file.exists() || !file.isDirectory()) {
             return list;
         }
         File[] files = file.listFiles();
@@ -96,15 +95,15 @@ public class DownLoadService {
      * 这个函数是为了上传中发生意外情况，上传失败后的善后
      */
     private void deleteFailFail(File path) {
-        if (path==null){
+        if (path == null) {
             return;
         }
         if (path.exists()) {
             if (path.isDirectory()) {
-                if (path.listFiles().length==0) {
+                if (path.listFiles().length == 0) {
                     path.delete();
                 }
-            }else {
+            } else {
                 path.delete();
             }
         }
@@ -127,5 +126,44 @@ public class DownLoadService {
         return tranPath.toString();
     }
 
+
+    public String deleteFile(String path) {
+        String p=tranPathName(path);
+        if (p == null) {
+            return "未找到文件";
+        }
+        File file = new File(p);
+        if (file.exists()) {
+            if (file.isDirectory()) {
+                try {
+                    if (!deleteDir(file)) {
+                        return "未知错误,查看服务器日志";
+                    }
+                    return "完成";
+                }catch (Exception e) {
+                    return e.getMessage();
+                }
+            }else {
+                return "路径错误,查看服务器日志";
+            }
+        }
+        return "未知错误,查看服务器日志";
+    }
+
+
+    public boolean deleteDir(File dir) {
+        File[] files = dir.listFiles();
+        for (File file : files) {
+            if (file.isDirectory()) {
+                return false;
+            }
+        }
+
+        for (File file : files) {
+            file.delete();
+        }
+        dir.delete();
+        return true;
+    }
 
 }
